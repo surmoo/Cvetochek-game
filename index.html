@@ -35,7 +35,7 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreboard = document.getElementById('scoreboard');
-
+    
     // Подгоняем канвас под размер экрана
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -43,29 +43,23 @@
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
-
+    
     // Настройки игры
     let score = 0;
     let misses = 0;
     let gameOver = false;
     const emojis = [];
     const emojiSize = 50; // размер эмодзи в пикселях
-
+    
     // Массив случайных эмодзи (кроме цветочка)
     const randomEmojis = ['😀','😂','😍','😎','🤖','🍎','🍔','⚽','🎈','🚗','🌟','🍀'];
-
-    // Функция создания нового эмодзи
+    
+    // Функция создания нового эмодзи с волнообразной траекторией
     function spawnEmoji() {
       // Вероятность появления цветочка – 30%
       const isFlower = Math.random() < 0.3;
-      let char;
-      if (isFlower) {
-        char = '🌸';
-      } else {
-        // Выбираем случайный эмодзи из массива
-        char = randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
-      }
-      // Задаём базовую позицию x (запоминаем её для волнообразного движения)
+      let char = isFlower ? '🌸' : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
+      // Определяем базовую позицию x
       const baseX = Math.random() * (canvas.width - emojiSize);
       // Параметры волны
       const amplitude = 30 + Math.random() * 20;  // амплитуда колебаний
@@ -82,7 +76,7 @@
         char: char
       });
     }
-
+    
     // Обработчик кликов по канвасу
     canvas.addEventListener('click', function(e) {
       if (gameOver) return;
@@ -94,7 +88,7 @@
       // Проверяем попадание по каждому эмодзи
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
-        // Обновляем x согласно волнообразному движению: x = baseX + amplitude * sin(y/period)
+        // Обновляем x согласно волнообразному движению
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         if (
           clickX >= emoji.x &&
@@ -118,12 +112,12 @@
       updateScoreboard();
       checkGameOver();
     });
-
+    
     // Обновление табло
     function updateScoreboard() {
       scoreboard.innerText = `Счёт: ${score} | Промахов: ${misses}`;
     }
-
+    
     // Проверка окончания игры
     function checkGameOver() {
       if (misses >= 3) {
@@ -134,7 +128,7 @@
         }, 10);
       }
     }
-
+    
     // Сброс игры
     function resetGame() {
       score = 0;
@@ -143,30 +137,31 @@
       gameOver = false;
       updateScoreboard();
     }
-
+    
     // Основной цикл игры
     function update() {
-      if (!gameOver) {
-        // С вероятностью 3% за кадр создаём новое эмодзи
-        if (Math.random() < 0.03) {
-          spawnEmoji();
-        }
+      if (!gameOver && Math.random() < 0.03) {
+        spawnEmoji();
       }
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = emojiSize + "px serif";
-
+      ctx.textBaseline = "top";  // рисуем текст от верхнего края
+      
       // Обновляем положение эмодзи и рисуем их
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         // Волнообразное движение: x = baseX + amplitude * sin(y/period)
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         emoji.y += emoji.speed;
-        ctx.fillText(emoji.char, emoji.x, emoji.y + emojiSize);
-        // Если эмодзи ушёл за нижнюю границу, удаляем и засчитываем промах
+        ctx.fillText(emoji.char, emoji.x, emoji.y);
+        // Если эмодзи ушёл за нижнюю границу
         if (emoji.y > canvas.height) {
+          // Если это цветочек, засчитываем промах
+          if (emoji.isFlower) {
+            misses++;
+          }
           emojis.splice(i, 1);
-          misses++;
           updateScoreboard();
           checkGameOver();
         }
@@ -174,7 +169,7 @@
       
       requestAnimationFrame(update);
     }
-
+    
     update();
   </script>
 </body>
