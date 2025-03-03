@@ -49,25 +49,26 @@
     let misses = 0;
     let gameOver = false;
     const emojis = [];
-    const emojiSize = 50; // размер эмодзи в пикселях
-    const hitMargin = 10; // допуск для попадания
+    const emojiSize = 50; // Будем считать, что это диаметр эмодзи
+    const hitMargin = 20; // Допуск для попадания
 
     // Массив случайных эмодзи для нецветочков
     const randomEmojis = ['😀','😂','😍','😎','🤖','🍎','🍔','⚽','🎈','🚗','🌟','🍀'];
 
-    // Функция создания нового эмодзи с волнообразной траекторией
+    // Функция создания нового эмодзи с волнообразной траекторией (координаты центра)
     function spawnEmoji() {
       // Вероятность появления цветочка – 30%
       const isFlower = Math.random() < 0.3;
       const char = isFlower ? '🌸' : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
-      const baseX = Math.random() * (canvas.width - emojiSize);
-      const amplitude = 30 + Math.random() * 20;  // амплитуда волны
-      const period = 100 + Math.random() * 100;     // период волны
+      // Выбираем базовую координату x так, чтобы эмодзи полностью помещался:
+      const baseX = emojiSize / 2 + Math.random() * (canvas.width - emojiSize);
+      const amplitude = 30 + Math.random() * 20;  // Амплитуда волны
+      const period = 100 + Math.random() * 100;     // Период волны
       const speed = 2 + Math.random() * 3;
       emojis.push({
         baseX: baseX,
         x: baseX,
-        y: -emojiSize,
+        y: -emojiSize / 2,  // Стартуем чуть выше экрана
         amplitude: amplitude,
         period: period,
         speed: speed,
@@ -76,7 +77,7 @@
       });
     }
 
-    // Обработчик кликов по канвасу с проверкой попадания по кругу
+    // Обработчик кликов с проверкой попадания по кругу
     canvas.addEventListener('click', function(e) {
       if (gameOver) return;
       const rect = canvas.getBoundingClientRect();
@@ -84,17 +85,13 @@
       const clickY = e.clientY - rect.top;
       let hit = false;
       
-      // Проверяем попадание по каждому эмодзи
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         // Обновляем x согласно волнообразному движению
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
-        // Находим центр эмодзи
-        const centerX = emoji.x + emojiSize / 2;
-        const centerY = emoji.y + emojiSize / 2;
-        // Радиус попадания: половина размера эмодзи + допуск
+        // Так как мы рисуем по центру, координаты эмодзи уже являются центром
+        const distance = Math.hypot(clickX - emoji.x, clickY - emoji.y);
         const hitRadius = emojiSize / 2 + hitMargin;
-        const distance = Math.sqrt(Math.pow(clickX - centerX, 2) + Math.pow(clickY - centerY, 2));
         if (distance <= hitRadius) {
           hit = true;
           if (emoji.isFlower) {
@@ -140,25 +137,23 @@
 
     // Основной цикл игры
     function update() {
-      // Создаем новое эмодзи с вероятностью 3% за кадр, если игра не окончена
       if (!gameOver && Math.random() < 0.03) {
         spawnEmoji();
       }
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = emojiSize + "px serif";
-      ctx.textBaseline = "top";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-      // Обновляем положение эмодзи и рисуем их
+      // Рисуем и обновляем эмодзи
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
-        // Волнообразное движение: x = baseX + amplitude * sin(y/period)
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         emoji.y += emoji.speed;
         ctx.fillText(emoji.char, emoji.x, emoji.y);
-        // Если эмодзи коснулся низа экрана (его нижняя граница выходит за пределы):
-        if (emoji.y + emojiSize > canvas.height) {
-          // Если это цветочек, засчитываем промах
+        // Если нижняя часть эмодзи (центр минус радиус) ушла за экран
+        if (emoji.y - emojiSize / 2 > canvas.height) {
           if (emoji.isFlower) {
             misses++;
           }
