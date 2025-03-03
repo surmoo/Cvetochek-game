@@ -76,7 +76,7 @@
       });
     }
 
-    // Обработчик кликов по канвасу
+    // Обработчик кликов по канвасу с проверкой попадания по кругу
     canvas.addEventListener('click', function(e) {
       if (gameOver) return;
       const rect = canvas.getBoundingClientRect();
@@ -84,17 +84,18 @@
       const clickY = e.clientY - rect.top;
       let hit = false;
       
-      // Проходим по всем эмодзи
+      // Проверяем попадание по каждому эмодзи
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         // Обновляем x согласно волнообразному движению
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
-        if (
-          clickX >= emoji.x - hitMargin &&
-          clickX <= emoji.x + emojiSize + hitMargin &&
-          clickY >= emoji.y - hitMargin &&
-          clickY <= emoji.y + emojiSize + hitMargin
-        ) {
+        // Находим центр эмодзи
+        const centerX = emoji.x + emojiSize / 2;
+        const centerY = emoji.y + emojiSize / 2;
+        // Радиус попадания: половина размера эмодзи + допуск
+        const hitRadius = emojiSize / 2 + hitMargin;
+        const distance = Math.sqrt(Math.pow(clickX - centerX, 2) + Math.pow(clickY - centerY, 2));
+        if (distance <= hitRadius) {
           hit = true;
           if (emoji.isFlower) {
             score++;
