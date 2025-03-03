@@ -49,9 +49,9 @@
     let misses = 0;
     let gameOver = false;
     const emojis = [];
-    const emojiSize = 50; // Диаметр эмодзи (будем считать, что иконка вписывается в круг)
-    // Допуски для хитбоксов: для цветка — больше, для остальных — меньше
-    const flowerExtraMargin = 30;
+    const emojiSize = 50; // Диаметр эмодзи (предполагаем, что иконка вписывается в круг)
+    // Допуски для хитбоксов: для цветочка – больше, для остальных – меньше
+    const flowerExtraMargin = 30; 
     const normalExtraMargin = 10;
 
     // Массив случайных эмодзи для нецветочков
@@ -59,15 +59,14 @@
 
     // Функция создания нового эмодзи с волнообразной траекторией (координаты центра)
     function spawnEmoji() {
-      // Вероятность появления цветочка – 30%
       const isFlower = Math.random() < 0.3;
       const char = isFlower ? '🌸' : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
       // Выбираем базовую координату x так, чтобы эмодзи полностью помещался:
       const baseX = emojiSize/2 + Math.random() * (canvas.width - emojiSize);
-      const amplitude = 30 + Math.random() * 20;  // Амплитуда волны
-      const period = 100 + Math.random() * 100;     // Период волны
+      const amplitude = 30 + Math.random() * 20;  
+      const period = 100 + Math.random() * 100;     
       const speed = 2 + Math.random() * 3;
-      // Координата y задаём так, чтобы эмодзи начинал за экраном (вверху)
+      // Координата y задаётся так, чтобы эмодзи появлялся за экраном сверху
       emojis.push({
         baseX: baseX,
         x: baseX,
@@ -80,17 +79,16 @@
       });
     }
 
-    // Функция обработки попадания по координатам клика/тача
+    // Функция обработки попадания (используется и для кликов, и для touch-событий)
     function handleHit(clickX, clickY) {
       let hit = false;
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         // Обновляем x согласно волнообразному движению
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
-        // Центр эмодзи совпадает с (emoji.x, emoji.y) благодаря центровке текста
         const centerX = emoji.x;
         const centerY = emoji.y;
-        // Выбираем допуск: для цветка — больше
+        // Выбираем дополнительный запас для хитбокса
         const extraMargin = emoji.isFlower ? flowerExtraMargin : normalExtraMargin;
         const hitRadius = emojiSize/2 + extraMargin;
         const distance = Math.hypot(clickX - centerX, clickY - centerY);
@@ -105,9 +103,7 @@
           break;
         }
       }
-      if (!hit) {
-        misses++;
-      }
+      // Если ни один эмодзи не был нажат, НЕ считаем это промахом!
       updateScoreboard();
       checkGameOver();
     }
@@ -124,7 +120,6 @@
     // Обработчик для тач-событий (смартфоны)
     canvas.addEventListener('touchstart', function(e) {
       if (gameOver) return;
-      // Предотвращаем всплытие и стандартное поведение
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const touch = e.changedTouches[0];
@@ -165,18 +160,17 @@
       }
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Рисуем эмодзи по центру: установка выравнивания по центру и по середине
+      // Центрирование эмодзи (координаты – центр символа)
       ctx.font = emojiSize + "px serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Рисуем и обновляем эмодзи
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         emoji.y += emoji.speed;
         ctx.fillText(emoji.char, emoji.x, emoji.y);
-        // Если эмодзи ушёл за нижнюю границу (учитываем его радиус)
+        // Если эмодзи ушёл за нижнюю границу (учитывая его размер)
         if (emoji.y - emojiSize/2 > canvas.height) {
           if (emoji.isFlower) {
             misses++;
