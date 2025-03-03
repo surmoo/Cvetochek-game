@@ -50,6 +50,7 @@
     let gameOver = false;
     const emojis = [];
     const emojiSize = 50; // размер эмодзи в пикселях
+    const hitMargin = 10; // допуск для попадания
 
     // Массив случайных эмодзи для нецветочков
     const randomEmojis = ['😀','😂','😍','😎','🤖','🍎','🍔','⚽','🎈','🚗','🌟','🍀'];
@@ -89,10 +90,10 @@
         // Обновляем x согласно волнообразному движению
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         if (
-          clickX >= emoji.x &&
-          clickX <= emoji.x + emojiSize &&
-          clickY >= emoji.y &&
-          clickY <= emoji.y + emojiSize
+          clickX >= emoji.x - hitMargin &&
+          clickX <= emoji.x + emojiSize + hitMargin &&
+          clickY >= emoji.y - hitMargin &&
+          clickY <= emoji.y + emojiSize + hitMargin
         ) {
           hit = true;
           if (emoji.isFlower) {
@@ -154,13 +155,12 @@
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         emoji.y += emoji.speed;
         ctx.fillText(emoji.char, emoji.x, emoji.y);
-        // Если эмодзи ушёл за нижнюю границу экрана:
-        if (emoji.y > canvas.height) {
+        // Если эмодзи коснулся низа экрана (его нижняя граница выходит за пределы):
+        if (emoji.y + emojiSize > canvas.height) {
           // Если это цветочек, засчитываем промах
           if (emoji.isFlower) {
             misses++;
           }
-          // Если не цветочек, ничего не засчитываем
           emojis.splice(i, 1);
           updateScoreboard();
           checkGameOver();
