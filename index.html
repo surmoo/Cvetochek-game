@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
-    /* Блок для слайдшоу фона */
+    /* Контейнер для слайдшоу фона */
     #slideshow {
       position: fixed;
       top: 0;
@@ -20,6 +20,8 @@
       height: 100%;
       z-index: -1;
       overflow: hidden;
+      /* Фоновый цвет на случай, если изображения не загрузятся */
+      background: #000;
     }
     #slideshow img {
       position: absolute;
@@ -30,7 +32,9 @@
       object-fit: cover;
       filter: brightness(50%);
       transform: translate(-50%, -50%);
-      transition: transform 1.5s ease, opacity 1.5s ease;
+      /* Плавный переход по opacity */
+      transition: opacity 1.5s ease;
+      opacity: 0;
     }
     #scoreboard {
       position: absolute;
@@ -49,14 +53,14 @@
   </style>
 </head>
 <body>
-  <!-- Блок слайдшоу -->
+  <!-- Контейнер для фонового слайдшоу -->
   <div id="slideshow"></div>
   
   <div id="scoreboard">Счёт: 0 | Промахов: 0</div>
   <canvas id="gameCanvas"></canvas>
   
   <script>
-    // Массив URL изображений (относительный путь)
+    // Массив URL изображений (относительные пути)
     const bgImages = [
       'Images/photo1.jpg',
       'Images/photo2.jpg',
@@ -81,27 +85,9 @@
     ];
     
     let currentBgIndex = -1;
-    let currentBgElement = null;
-    
-    // Направления для случайного смещения
-    const directions = {
-      'top': {x: 0, y: -1},
-      'bottom': {x: 0, y: 1},
-      'left': {x: -1, y: 0},
-      'right': {x: 1, y: 0},
-      'top-left': {x: -1, y: -1},
-      'top-right': {x: 1, y: -1},
-      'bottom-left': {x: -1, y: 1},
-      'bottom-right': {x: 1, y: 1}
-    };
-    
-    const offsetFactor = 10; // 10% смещения
-    
-    function getRandomDirection() {
-      const keys = Object.keys(directions);
-      return keys[Math.floor(Math.random() * keys.length)];
-    }
-    
+    let currentImg = null;
+    const transitionTime = 1500; // время перехода в мс
+
     function getNextBgIndex() {
       let nextIndex;
       do {
@@ -115,40 +101,29 @@
       const nextIndex = getNextBgIndex();
       const newImg = document.createElement('img');
       newImg.src = bgImages[nextIndex];
-      // Помещаем новое изображение под текущее: z-index ниже, чем у текущего
-      newImg.style.zIndex = currentBgElement ? 0 : 1;
-      newImg.style.opacity = 0;
+      // Добавляем изображение в контейнер, оно сразу будет занимать задний план
+      document.getElementById('slideshow').appendChild(newImg);
       
-      // Случайное направление для начального смещения
-      const dir = getRandomDirection();
-      const offset = directions[dir];
-      newImg.style.transform = `translate(-50%, -50%) translate(${offset.x * offsetFactor}%, ${offset.y * offsetFactor}%)`;
-      
-      // Дожидаемся загрузки нового изображения, чтобы не было мерцания
       newImg.onload = () => {
-        document.getElementById('slideshow').appendChild(newImg);
-        // Принудительный reflow
-        newImg.getBoundingClientRect();
-        // Переход нового изображения в центр
-        newImg.style.transform = 'translate(-50%, -50%)';
-        newImg.style.opacity = 1;
-        
-        // Если есть текущее изображение, запускаем его плавное исчезновение
-        if (currentBgElement) {
-          currentBgElement.style.opacity = 0;
-          // После окончания перехода удаляем старое изображение
+        // Плавно показываем новое изображение
+        requestAnimationFrame(() => {
+          newImg.style.opacity = "1";
+        });
+        // Если есть предыдущее изображение – плавно убираем его
+        if (currentImg) {
+          currentImg.style.opacity = "0";
+          // После завершения анимации удаляем его из DOM
           setTimeout(() => {
-            if (currentBgElement && currentBgElement.parentNode) {
-              currentBgElement.parentNode.removeChild(currentBgElement);
+            if (currentImg && currentImg.parentNode) {
+              currentImg.parentNode.removeChild(currentImg);
             }
-          }, 1500);
+          }, transitionTime);
         }
-        // Новое изображение становится текущим
-        currentBgElement = newImg;
+        currentImg = newImg;
       };
     }
     
-    // Переключаем фон каждые 8 секунд
+    // Первичный запуск и смена фона каждые 8 секунд
     showNextBackground();
     setInterval(showNextBackground, 8000);
     
@@ -178,14 +153,14 @@
     function spawnEmoji() {
       const isFlower = Math.random() < 0.3;
       const char = isFlower ? '🌸' : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
-      const baseX = emojiSize/2 + Math.random() * (canvas.width - emojiSize);
+      const baseX = emojiSize / 2 + Math.random() * (canvas.width - emojiSize);
       const amplitude = 30 + Math.random() * 20;  
       const period = 100 + Math.random() * 100;     
       const speed = 2 + Math.random() * 3;
       emojis.push({
         baseX: baseX,
         x: baseX,
-        y: -emojiSize/2,
+        y: -emojiSize / 2,
         amplitude: amplitude,
         period: period,
         speed: speed,
@@ -201,7 +176,7 @@
         const centerX = emoji.x;
         const centerY = emoji.y;
         const extraMargin = emoji.isFlower ? flowerExtraMargin : normalExtraMargin;
-        const hitRadius = emojiSize/2 + extraMargin;
+        const hitRadius = emojiSize / 2 + extraMargin;
         const distance = Math.hypot(clickX - centerX, clickY - centerY);
         if (distance <= hitRadius) {
           if (emoji.isFlower) {
@@ -272,7 +247,7 @@
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
         emoji.y += emoji.speed;
         ctx.fillText(emoji.char, emoji.x, emoji.y);
-        if (emoji.y - emojiSize/2 > canvas.height) {
+        if (emoji.y - emojiSize / 2 > canvas.height) {
           if (emoji.isFlower) {
             misses++;
           }
