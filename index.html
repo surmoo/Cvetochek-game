@@ -36,9 +36,12 @@
       height: 100%;
       object-fit: cover;
       filter: blur(20px);
-      transform: scale(1.1); /* слегка увеличено, чтобы края не были видны */
+      -webkit-filter: blur(20px);
+      transform: scale(1.1); /* Немного увеличено, чтобы края не были видны */
       transition: opacity 1.5s ease;
+      -webkit-transition: opacity 1.5s ease;
       opacity: 0;
+      will-change: opacity;
     }
     /* Слой основного изображения */
     #foreground-layer {
@@ -54,22 +57,34 @@
       height: 100%;
       object-fit: cover;
       transition: opacity 1.5s ease;
+      -webkit-transition: opacity 1.5s ease;
       opacity: 0;
+      will-change: opacity;
     }
-    /* Анимации для горизонтального скольжения основного изображения */
+    /* Анимации для плавного горизонтального скольжения основного изображения */
     .slide-ltr {
       animation: slideLeftToRight 8s linear forwards;
+      -webkit-animation: slideLeftToRight 8s linear forwards;
     }
     .slide-rtl {
       animation: slideRightToLeft 8s linear forwards;
+      -webkit-animation: slideRightToLeft 8s linear forwards;
     }
     @keyframes slideLeftToRight {
       0% { transform: translateX(-10%); }
       100% { transform: translateX(10%); }
     }
+    @-webkit-keyframes slideLeftToRight {
+      0% { -webkit-transform: translateX(-10%); }
+      100% { -webkit-transform: translateX(10%); }
+    }
     @keyframes slideRightToLeft {
       0% { transform: translateX(10%); }
       100% { transform: translateX(-10%); }
+    }
+    @-webkit-keyframes slideRightToLeft {
+      0% { -webkit-transform: translateX(10%); }
+      100% { -webkit-transform: translateX(-10%); }
     }
     #scoreboard {
       position: absolute;
