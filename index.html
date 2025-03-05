@@ -8,8 +8,6 @@
     html, body {
       margin: 0;
       padding: 0;
-      background: #000;
-      color: #fff;
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
@@ -22,7 +20,6 @@
       height: 100%;
       z-index: -1;
       overflow: hidden;
-      background: #000;
     }
     #slideshow img {
       position: absolute;
@@ -46,6 +43,7 @@
       background: rgba(0, 0, 0, 0.7);
       padding: 5px 10px;
       border-radius: 8px;
+      color: #fff;
     }
     canvas {
       display: block;
@@ -60,30 +58,28 @@
   <canvas id="gameCanvas"></canvas>
   
   <script>
-    // ==== Слайдшоу фона ====
-    const slideshow = document.getElementById('slideshow');
-    // Массив URL изображений; добавьте свои изображения сюда
+    // Массив URL изображений (обратите внимание, что путь указан относительно текущего файла)
     const bgImages = [
-      '/Images/photo1.jpg',
-      '/Images/photo2.jpg',
-      '/Images/photo3.jpg',
-      '/Images/photo4.jpg',
-      '/Images/photo5.jpg',
-      '/Images/photo6.jpg',
-      '/Images/photo7.jpg',
-      '/Images/photo8.jpg',
-      '/Images/photo9.jpg',
-      '/Images/photo10.jpg',
-      '/Images/photo11.jpg',
-      '/Images/photo12.jpg',
-      '/Images/photo13.jpg',
-      '/Images/photo14.jpg',
-      '/Images/photo15.jpg',
-      '/Images/photo16.jpg',
-      '/Images/photo17.jpg',
-      '/Images/photo18.jpg',
-      '/Images/photo19.jpg',
-      '/Images/photo20.jpg'
+      'Images/photo1.jpg',
+      'Images/photo2.jpg',
+      'Images/photo3.jpg',
+      'Images/photo4.jpg',
+      'Images/photo5.jpg',
+      'Images/photo6.jpg',
+      'Images/photo7.jpg',
+      'Images/photo8.jpg',
+      'Images/photo9.jpg',
+      'Images/photo10.jpg',
+      'Images/photo11.jpg',
+      'Images/photo12.jpg',
+      'Images/photo13.jpg',
+      'Images/photo14.jpg',
+      'Images/photo15.jpg',
+      'Images/photo16.jpg',
+      'Images/photo17.jpg',
+      'Images/photo18.jpg',
+      'Images/photo19.jpg',
+      'Images/photo20.jpg'
     ];
     
     let currentBgIndex = -1;
@@ -123,12 +119,13 @@
       const newImg = document.createElement('img');
       newImg.src = bgImages[nextIndex];
       newImg.style.opacity = 0;
+      
       // Случайное направление для входа нового изображения
       const dir = getRandomDirection();
       const offset = directions[dir];
       // Начальное положение: базовое центрирование + ограниченный сдвиг
       newImg.style.transform = `translate(-50%, -50%) translate(${offset.x * offsetFactor}%, ${offset.y * offsetFactor}%)`;
-      slideshow.appendChild(newImg);
+      document.getElementById('slideshow').appendChild(newImg);
       
       // Принудительный reflow
       newImg.getBoundingClientRect();
@@ -200,7 +197,6 @@
     }
     
     function handleHit(clickX, clickY) {
-      let hit = false;
       for (let i = emojis.length - 1; i >= 0; i--) {
         const emoji = emojis[i];
         emoji.x = emoji.baseX + emoji.amplitude * Math.sin(emoji.y / emoji.period);
@@ -210,7 +206,6 @@
         const hitRadius = emojiSize/2 + extraMargin;
         const distance = Math.hypot(clickX - centerX, clickY - centerY);
         if (distance <= hitRadius) {
-          hit = true;
           if (emoji.isFlower) {
             score++;
           } else {
