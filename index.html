@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
-    /* Контейнер для слайдшоу фона */
+    /* Контейнер для фонового слайдшоу */
     #slideshow {
       position: fixed;
       top: 0;
@@ -20,7 +20,6 @@
       height: 100%;
       z-index: -1;
       overflow: hidden;
-      /* Фоновый цвет на случай, если изображения не загрузятся */
       background: #000;
     }
     #slideshow img {
@@ -32,7 +31,6 @@
       object-fit: cover;
       filter: brightness(50%);
       transform: translate(-50%, -50%);
-      /* Плавный переход по opacity */
       transition: opacity 1.5s ease;
       opacity: 0;
     }
@@ -53,9 +51,7 @@
   </style>
 </head>
 <body>
-  <!-- Контейнер для фонового слайдшоу -->
   <div id="slideshow"></div>
-  
   <div id="scoreboard">Счёт: 0 | Промахов: 0</div>
   <canvas id="gameCanvas"></canvas>
   
@@ -84,48 +80,79 @@
       'Images/photo20.jpg'
     ];
     
-    let currentBgIndex = -1;
+    // Массив для хранения предварительно загруженных изображений
+    const preloadedImages = [];
+    let imagesLoaded = 0;
+    const totalImages = bgImages.length;
+    
+    // Функция предварительной загрузки
+    function preloadImages(callback) {
+      bgImages.forEach((src, index) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+          preloadedImages[index] = img;
+          imagesLoaded++;
+          if (imagesLoaded === totalImages) {
+            callback();
+          }
+        };
+        img.onerror = () => {
+          console.error(`Ошибка загрузки изображения: ${src}`);
+          // Даже при ошибке, отмечаем, что загрузка "завершена"
+          preloadedImages[index] = null;
+          imagesLoaded++;
+          if (imagesLoaded === totalImages) {
+            callback();
+          }
+        };
+      });
+    }
+    
     let currentImg = null;
     const transitionTime = 1500; // время перехода в мс
 
-    function getNextBgIndex() {
-      let nextIndex;
-      do {
-        nextIndex = Math.floor(Math.random() * bgImages.length);
-      } while (nextIndex === currentBgIndex && bgImages.length > 1);
-      currentBgIndex = nextIndex;
-      return nextIndex;
+    // Выбираем случайное изображение из предварительно загруженных
+    function getRandomImage() {
+      let available = preloadedImages.filter(img => img !== null);
+      if (!available.length) return null;
+      const randomIndex = Math.floor(Math.random() * available.length);
+      return available[randomIndex];
     }
     
     function showNextBackground() {
-      const nextIndex = getNextBgIndex();
-      const newImg = document.createElement('img');
-      newImg.src = bgImages[nextIndex];
-      // Добавляем изображение в контейнер, оно сразу будет занимать задний план
+      const newImgObj = getRandomImage();
+      if (!newImgObj) return; // если ни одно изображение не загружено
+      
+      // Клонируем, чтобы создать новый элемент DOM
+      const newImg = newImgObj.cloneNode();
+      newImg.style.opacity = "0";
       document.getElementById('slideshow').appendChild(newImg);
       
-      newImg.onload = () => {
-        // Плавно показываем новое изображение
-        requestAnimationFrame(() => {
-          newImg.style.opacity = "1";
-        });
-        // Если есть предыдущее изображение – плавно убираем его
-        if (currentImg) {
-          currentImg.style.opacity = "0";
-          // После завершения анимации удаляем его из DOM
-          setTimeout(() => {
-            if (currentImg && currentImg.parentNode) {
-              currentImg.parentNode.removeChild(currentImg);
-            }
-          }, transitionTime);
-        }
-        currentImg = newImg;
-      };
+      // Через requestAnimationFrame запускаем анимацию появления
+      requestAnimationFrame(() => {
+        newImg.style.opacity = "1";
+      });
+      
+      // Если есть предыдущее изображение – плавно убираем его
+      if (currentImg) {
+        currentImg.style.opacity = "0";
+        setTimeout(() => {
+          if (currentImg && currentImg.parentNode) {
+            currentImg.parentNode.removeChild(currentImg);
+          }
+        }, transitionTime);
+      }
+      currentImg = newImg;
     }
     
-    // Первичный запуск и смена фона каждые 8 секунд
-    showNextBackground();
-    setInterval(showNextBackground, 8000);
+    // После предварительной загрузки запускаем слайдшоу
+    preloadImages(() => {
+      // Немедленно показываем первое изображение
+      showNextBackground();
+      // Смена фона каждые 8 секунд
+      setInterval(showNextBackground, 8000);
+    });
     
     
     // ==== Игровой код ====
