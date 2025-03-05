@@ -25,14 +25,12 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      /* Увеличенный размер для запаса, чтобы при смещении всегда покрывать экран */
       min-width: 130%;
       min-height: 130%;
       object-fit: cover;
       filter: brightness(50%);
-      /* Центрирование */
       transform: translate(-50%, -50%);
-      transition: transform 3s ease, opacity 3s ease;
+      transition: transform 1.5s ease, opacity 1.5s ease;
     }
     #scoreboard {
       position: absolute;
@@ -58,7 +56,7 @@
   <canvas id="gameCanvas"></canvas>
   
   <script>
-    // Массив URL изображений (обратите внимание, что путь указан относительно текущего файла)
+    // Массив URL изображений (относительный путь)
     const bgImages = [
       'Images/photo1.jpg',
       'Images/photo2.jpg',
@@ -85,7 +83,7 @@
     let currentBgIndex = -1;
     let currentBgElement = null;
     
-    // Возможные направления смещения (единичные вектора)
+    // Направления для случайного смещения
     const directions = {
       'top': {x: 0, y: -1},
       'bottom': {x: 0, y: 1},
@@ -97,7 +95,6 @@
       'bottom-right': {x: 1, y: 1}
     };
     
-    // Максимальный сдвиг в процентах от размера изображения (учитывая запас)
     const offsetFactor = 10; // 10% смещения
     
     function getRandomDirection() {
@@ -118,39 +115,40 @@
       const nextIndex = getNextBgIndex();
       const newImg = document.createElement('img');
       newImg.src = bgImages[nextIndex];
+      // Помещаем новое изображение под текущее: z-index ниже, чем у текущего
+      newImg.style.zIndex = currentBgElement ? 0 : 1;
       newImg.style.opacity = 0;
       
-      // Случайное направление для входа нового изображения
+      // Случайное направление для начального смещения
       const dir = getRandomDirection();
       const offset = directions[dir];
-      // Начальное положение: базовое центрирование + ограниченный сдвиг
       newImg.style.transform = `translate(-50%, -50%) translate(${offset.x * offsetFactor}%, ${offset.y * offsetFactor}%)`;
-      document.getElementById('slideshow').appendChild(newImg);
       
-      // Принудительный reflow
-      newImg.getBoundingClientRect();
-      
-      // Анимация входа: перемещаем в центр
-      newImg.style.transform = 'translate(-50%, -50%)';
-      newImg.style.opacity = 1;
-      
-      // Если уже есть предыдущее изображение, анимируем его уход
-      if (currentBgElement) {
-        const exitDir = getRandomDirection();
-        const exitOffset = directions[exitDir];
-        currentBgElement.style.transform = `translate(-50%, -50%) translate(${exitOffset.x * offsetFactor}%, ${exitOffset.y * offsetFactor}%)`;
-        currentBgElement.style.opacity = 0;
-        // Удаляем старое изображение после завершения анимации
-        setTimeout(() => {
-          if (currentBgElement && currentBgElement.parentNode) {
-            currentBgElement.parentNode.removeChild(currentBgElement);
-          }
-        }, 3000);
-      }
-      currentBgElement = newImg;
+      // Дожидаемся загрузки нового изображения, чтобы не было мерцания
+      newImg.onload = () => {
+        document.getElementById('slideshow').appendChild(newImg);
+        // Принудительный reflow
+        newImg.getBoundingClientRect();
+        // Переход нового изображения в центр
+        newImg.style.transform = 'translate(-50%, -50%)';
+        newImg.style.opacity = 1;
+        
+        // Если есть текущее изображение, запускаем его плавное исчезновение
+        if (currentBgElement) {
+          currentBgElement.style.opacity = 0;
+          // После окончания перехода удаляем старое изображение
+          setTimeout(() => {
+            if (currentBgElement && currentBgElement.parentNode) {
+              currentBgElement.parentNode.removeChild(currentBgElement);
+            }
+          }, 1500);
+        }
+        // Новое изображение становится текущим
+        currentBgElement = newImg;
+      };
     }
     
-    // Запускаем слайдшоу: смена фона каждые 8 секунд
+    // Переключаем фон каждые 8 секунд
     showNextBackground();
     setInterval(showNextBackground, 8000);
     
