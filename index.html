@@ -30,9 +30,21 @@
       min-height: 130%;
       object-fit: cover;
       filter: brightness(50%);
-      transform: translate(-50%, -50%);
+      /* Начальное состояние слайдов */
+      transform: translate(-50%, -50%) scale(1);
       transition: opacity 1.5s ease;
       opacity: 0;
+      /* Анимация плавного зума и скольжения (8с = время показа слайда) */
+      animation: panZoom 8s linear forwards;
+    }
+    @keyframes panZoom {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        /* Уменьшено увеличение (от 1 до 1.03) и добавлено легкое скольжение */
+        transform: translate(-52%, -52%) scale(1.03);
+      }
     }
     #scoreboard {
       position: absolute;
@@ -120,36 +132,34 @@
       return available[randomIndex];
     }
     
-  function showNextBackground() {
-    const newImgObj = getRandomImage();
-    if (!newImgObj) return; // если ни одно изображение не загружено
+    function showNextBackground() {
+      const newImgObj = getRandomImage();
+      if (!newImgObj) return; // если ни одно изображение не загружено
   
-    // Создаём новый элемент изображения
-    const newImg = newImgObj.cloneNode();
-    newImg.style.opacity = "0";
-    document.getElementById('slideshow').appendChild(newImg);
+      // Создаём новый элемент изображения
+      const newImg = newImgObj.cloneNode();
+      newImg.style.opacity = "0";
+      document.getElementById('slideshow').appendChild(newImg);
   
-    // Принудительный reflow, чтобы браузер зафиксировал стили
-    newImg.offsetHeight;
+      // Принудительный reflow, чтобы браузер зафиксировал стили
+      newImg.offsetHeight;
   
-    // Запускаем анимацию появления нового изображения
-    newImg.style.opacity = "1";
+      // Запускаем анимацию появления нового изображения
+      newImg.style.opacity = "1";
   
-    // Если есть предыдущее изображение – начинаем его плавное скрытие
-    if (currentImg) {
-      const oldImg = currentImg; // сохраняем ссылку на старое изображение
-      oldImg.style.opacity = "0";
-      setTimeout(() => {
-        if (oldImg && oldImg.parentNode) {
-          oldImg.parentNode.removeChild(oldImg);
-        }
-      }, transitionTime);
+      // Если есть предыдущее изображение – начинаем его плавное скрытие
+      if (currentImg) {
+        const oldImg = currentImg; // сохраняем ссылку на старое изображение
+        oldImg.style.opacity = "0";
+        setTimeout(() => {
+          if (oldImg && oldImg.parentNode) {
+            oldImg.parentNode.removeChild(oldImg);
+          }
+        }, transitionTime);
+      }
+      // Обновляем currentImg на новое изображение
+      currentImg = newImg;
     }
-    // Обновляем currentImg на новое изображение
-    currentImg = newImg;
-  }
-
-
     
     // После предварительной загрузки запускаем слайдшоу
     preloadImages(() => {
@@ -158,7 +168,6 @@
       // Смена фона каждые 8 секунд
       setInterval(showNextBackground, 8000);
     });
-    
     
     // ==== Игровой код ====
     const canvas = document.getElementById('gameCanvas');
