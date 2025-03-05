@@ -22,7 +22,7 @@
       overflow: hidden;
       background: #000;
     }
-    /* Изображения на весь экран с плавным появлением */
+    /* Изображения растянуты на весь экран */
     #slideshow img {
       position: absolute;
       top: 0;
@@ -42,12 +42,12 @@
       animation: slideRightToLeft 8s linear forwards;
     }
     @keyframes slideLeftToRight {
-      0% { transform: translateX(-5%); }
-      100% { transform: translateX(5%); }
+      0% { transform: translateX(-10%); }
+      100% { transform: translateX(10%); }
     }
     @keyframes slideRightToLeft {
-      0% { transform: translateX(5%); }
-      100% { transform: translateX(-5%); }
+      0% { transform: translateX(10%); }
+      100% { transform: translateX(-10%); }
     }
     #scoreboard {
       position: absolute;
@@ -126,7 +126,7 @@
     let currentImg = null;
     const transitionTime = 1500; // время перехода в мс
     
-    // Выбираем случайное изображение из предварительно загруженных
+    // Выбираем случайное изображение из предзагруженных
     function getRandomImage() {
       const available = preloadedImages.filter(img => img !== null);
       if (!available.length) return null;
@@ -134,27 +134,29 @@
       return available[randomIndex];
     }
     
+    // Функция смены фона
     function showNextBackground() {
       const newImgObj = getRandomImage();
-      if (!newImgObj) return;
-  
-      // Создаём новый элемент изображения
-      const newImg = newImgObj.cloneNode();
+      if (!newImgObj) return; // если нет ни одного изображения
+      
+      // Создаем новый элемент <img> и задаем его src
+      const newImg = document.createElement('img');
+      newImg.src = newImgObj.src;
       newImg.style.opacity = "0";
       
       // Случайно выбираем направление скольжения
       const directionClass = Math.random() < 0.5 ? 'slide-ltr' : 'slide-rtl';
       newImg.classList.add(directionClass);
-  
+      
       document.getElementById('slideshow').appendChild(newImg);
-  
-      // Принудительный reflow, чтобы браузер зафиксировал стили
-      newImg.offsetHeight;
-  
-      // Запускаем анимацию появления нового изображения
+      
+      // Принудительный reflow для активации анимации
+      void newImg.offsetWidth;
+      
+      // Запускаем анимацию появления (fade-in)
       newImg.style.opacity = "1";
-  
-      // Если есть предыдущее изображение – начинаем его плавное скрытие
+      
+      // Если есть предыдущее изображение – плавно скрываем его
       if (currentImg) {
         const oldImg = currentImg;
         oldImg.style.opacity = "0";
@@ -189,7 +191,7 @@
     let misses = 0;
     let gameOver = false;
     const emojis = [];
-    const emojiSize = 50;
+    const emojiSize = 50; // Размер эмодзи
     const flowerExtraMargin = 30; 
     const normalExtraMargin = 10;
     
