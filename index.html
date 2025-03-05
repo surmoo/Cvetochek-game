@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
-    /* Контейнер для фонового слайдшоу */
+    /* Контейнер с двумя слоями: размытой подложкой и основным изображением */
     #slideshow {
       position: fixed;
       top: 0;
@@ -22,19 +22,41 @@
       overflow: hidden;
       background: #000;
     }
-    /* Изображения растянуты на весь экран */
-    #slideshow img {
+    /* Слой размытой подложки */
+    #blurred-layer {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
+      z-index: 0;
+    }
+    #blurred-layer img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      filter: brightness(50%);
+      filter: blur(20px);
+      transform: scale(1.1); /* слегка увеличено, чтобы края не были видны */
       transition: opacity 1.5s ease;
       opacity: 0;
     }
-    /* Анимации для плавного горизонтального скольжения */
+    /* Слой основного изображения */
+    #foreground-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    #foreground-layer img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 1.5s ease;
+      opacity: 0;
+    }
+    /* Анимации для горизонтального скольжения основного изображения */
     .slide-ltr {
       animation: slideLeftToRight 8s linear forwards;
     }
@@ -66,7 +88,10 @@
   </style>
 </head>
 <body>
-  <div id="slideshow"></div>
+  <div id="slideshow">
+    <div id="blurred-layer"></div>
+    <div id="foreground-layer"></div>
+  </div>
   <div id="scoreboard">Счёт: 0 | Промахов: 0</div>
   <canvas id="gameCanvas"></canvas>
   
@@ -123,7 +148,8 @@
       });
     }
     
-    let currentImg = null;
+    let currentForeground = null;
+    let currentBlurred = null;
     const transitionTime = 1500; // время перехода в мс
     
     // Выбираем случайное изображение из предзагруженных
@@ -134,39 +160,52 @@
       return available[randomIndex];
     }
     
-    // Функция смены фона
+    // Функция смены фона: обновляем и основной слой, и слой размытой подложки
     function showNextBackground() {
       const newImgObj = getRandomImage();
-      if (!newImgObj) return; // если нет ни одного изображения
+      if (!newImgObj) return;
       
-      // Создаем новый элемент <img> и задаем его src
-      const newImg = document.createElement('img');
-      newImg.src = newImgObj.src;
-      newImg.style.opacity = "0";
-      
-      // Случайно выбираем направление скольжения
+      // Создаем элемент для основного изображения
+      const newForegroundImg = document.createElement('img');
+      newForegroundImg.src = newImgObj.src;
+      newForegroundImg.style.opacity = "0";
+      // Выбираем случайное направление движения
       const directionClass = Math.random() < 0.5 ? 'slide-ltr' : 'slide-rtl';
-      newImg.classList.add(directionClass);
-      
-      document.getElementById('slideshow').appendChild(newImg);
-      
+      newForegroundImg.classList.add(directionClass);
+      document.getElementById('foreground-layer').appendChild(newForegroundImg);
       // Принудительный reflow для активации анимации
-      void newImg.offsetWidth;
+      void newForegroundImg.offsetWidth;
+      newForegroundImg.style.opacity = "1";
       
-      // Запускаем анимацию появления (fade-in)
-      newImg.style.opacity = "1";
+      // Создаем элемент для размытой подложки
+      const newBlurredImg = document.createElement('img');
+      newBlurredImg.src = newImgObj.src;
+      newBlurredImg.style.opacity = "0";
+      document.getElementById('blurred-layer').appendChild(newBlurredImg);
+      void newBlurredImg.offsetWidth;
+      newBlurredImg.style.opacity = "1";
       
-      // Если есть предыдущее изображение – плавно скрываем его
-      if (currentImg) {
-        const oldImg = currentImg;
-        oldImg.style.opacity = "0";
+      // Плавное скрытие предыдущего основного изображения
+      if (currentForeground) {
+        currentForeground.style.opacity = "0";
         setTimeout(() => {
-          if (oldImg && oldImg.parentNode) {
-            oldImg.parentNode.removeChild(oldImg);
+          if (currentForeground && currentForeground.parentNode) {
+            currentForeground.parentNode.removeChild(currentForeground);
           }
         }, transitionTime);
       }
-      currentImg = newImg;
+      // Плавное скрытие предыдущей размытой подложки
+      if (currentBlurred) {
+        currentBlurred.style.opacity = "0";
+        setTimeout(() => {
+          if (currentBlurred && currentBlurred.parentNode) {
+            currentBlurred.parentNode.removeChild(currentBlurred);
+          }
+        }, transitionTime);
+      }
+      
+      currentForeground = newForegroundImg;
+      currentBlurred = newBlurredImg;
     }
     
     // После предварительной загрузки запускаем слайдшоу
@@ -191,7 +230,7 @@
     let misses = 0;
     let gameOver = false;
     const emojis = [];
-    const emojiSize = 50; // Размер эмодзи
+    const emojiSize = 50;
     const flowerExtraMargin = 30; 
     const normalExtraMargin = 10;
     
