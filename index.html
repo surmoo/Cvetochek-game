@@ -120,31 +120,32 @@
       return available[randomIndex];
     }
     
-    function showNextBackground() {
-      const newImgObj = getRandomImage();
-      if (!newImgObj) return; // если ни одно изображение не загружено
-      
-      // Клонируем, чтобы создать новый элемент DOM
-      const newImg = newImgObj.cloneNode();
-      newImg.style.opacity = "0";
-      document.getElementById('slideshow').appendChild(newImg);
-      
-      // Через requestAnimationFrame запускаем анимацию появления
-      requestAnimationFrame(() => {
-        newImg.style.opacity = "1";
-      });
-      
-      // Если есть предыдущее изображение – плавно убираем его
-      if (currentImg) {
-        currentImg.style.opacity = "0";
-        setTimeout(() => {
-          if (currentImg && currentImg.parentNode) {
-            currentImg.parentNode.removeChild(currentImg);
-          }
-        }, transitionTime);
-      }
-      currentImg = newImg;
+  function showNextBackground() {
+    const newImgObj = getRandomImage();
+    if (!newImgObj) return; // если ни одно изображение не загружено
+    
+    const newImg = newImgObj.cloneNode();
+    newImg.style.opacity = "0";
+    document.getElementById('slideshow').appendChild(newImg);
+    
+    // Принудительный reflow
+    newImg.offsetHeight; // заставляем браузер рассчитать стили
+    
+    // Запускаем анимацию появления
+    newImg.style.opacity = "1";
+    
+    // Плавное скрытие предыдущего изображения
+    if (currentImg) {
+      currentImg.style.opacity = "0";
+      setTimeout(() => {
+        if (currentImg && currentImg.parentNode) {
+          currentImg.parentNode.removeChild(currentImg);
+        }
+      }, transitionTime);
     }
+    currentImg = newImg;
+  }
+
     
     // После предварительной загрузки запускаем слайдшоу
     preloadImages(() => {
