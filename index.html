@@ -123,28 +123,32 @@
   function showNextBackground() {
     const newImgObj = getRandomImage();
     if (!newImgObj) return; // если ни одно изображение не загружено
-    
+  
+    // Создаём новый элемент изображения
     const newImg = newImgObj.cloneNode();
     newImg.style.opacity = "0";
     document.getElementById('slideshow').appendChild(newImg);
-    
-    // Принудительный reflow
-    newImg.offsetHeight; // заставляем браузер рассчитать стили
-    
-    // Запускаем анимацию появления
+  
+    // Принудительный reflow, чтобы браузер зафиксировал стили
+    newImg.offsetHeight;
+  
+    // Запускаем анимацию появления нового изображения
     newImg.style.opacity = "1";
-    
-    // Плавное скрытие предыдущего изображения
+  
+    // Если есть предыдущее изображение – начинаем его плавное скрытие
     if (currentImg) {
-      currentImg.style.opacity = "0";
+      const oldImg = currentImg; // сохраняем ссылку на старое изображение
+      oldImg.style.opacity = "0";
       setTimeout(() => {
-        if (currentImg && currentImg.parentNode) {
-          currentImg.parentNode.removeChild(currentImg);
+        if (oldImg && oldImg.parentNode) {
+          oldImg.parentNode.removeChild(oldImg);
         }
       }, transitionTime);
     }
+    // Обновляем currentImg на новое изображение
     currentImg = newImg;
   }
+
 
     
     // После предварительной загрузки запускаем слайдшоу
