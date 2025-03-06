@@ -27,6 +27,24 @@
       z-index: 100;
       cursor: pointer;
     }
+    /* Кнопка выключения звука */
+    #muteButton {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
     /* Контейнер для фонового слайдшоу */
     #slideshow {
       position: fixed;
@@ -98,6 +116,8 @@
 <body>
   <!-- Стартовый оверлей -->
   <div id="startOverlay">Нажмите, чтобы начать</div>
+  <!-- Кнопка выключения звука -->
+  <button id="muteButton">🔊</button>
   
   <div id="slideshow"></div>
   <div id="scoreboard">Счёт: 0 | Промахов: 0</div>
@@ -125,6 +145,15 @@
     startOverlay.addEventListener('click', function() {
       startMusic();
       startOverlay.style.display = 'none';
+    });
+    
+    // Кнопка для выключения/включения звука
+    const muteButton = document.getElementById('muteButton');
+    muteButton.addEventListener('click', function(e) {
+      // Предотвращаем всплытие, чтобы не мешать клику по оверлею (если он еще виден)
+      e.stopPropagation();
+      backgroundTrack.muted = !backgroundTrack.muted;
+      muteButton.innerText = backgroundTrack.muted ? '🔇' : '🔊';
     });
     
     // --- Фоновое слайдшоу ---
@@ -188,11 +217,10 @@
       });
     }
     
-    // --- Новая логика для случайного порядка без повторений ---
+    // --- Логика для случайного порядка картинок без повторений ---
     let imageOrder = [];
     let currentImageIndex = 0;
     
-    // Алгоритм Фишера — Йетса для перемешивания
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
