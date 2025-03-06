@@ -85,7 +85,26 @@
   <canvas id="gameCanvas"></canvas>
   
   <script>
-    // Массив URL изображений (относительные пути)
+    // --- Аудио: инициализация двух треков ---
+    const track1 = new Audio('music/audio1.mp3');
+    const track2 = new Audio('audio/audio2.mp3');
+    let musicStarted = false;
+    
+    track1.addEventListener('ended', () => {
+      track2.play();
+    });
+    track2.addEventListener('ended', () => {
+      track1.play();
+    });
+    
+    function startMusic() {
+      if (!musicStarted) {
+        musicStarted = true;
+        track1.play();
+      }
+    }
+    
+    // --- Фоновое слайдшоу ---
     const bgImages = [
       'Images/photo1.jpg',
       'Images/photo2.jpg',
@@ -120,12 +139,10 @@
       'Images/photo31.jpg'
     ];
     
-    // Массив для хранения предварительно загруженных изображений
     const preloadedImages = [];
     let imagesLoaded = 0;
     const totalImages = bgImages.length;
     
-    // Функция предварительной загрузки
     function preloadImages(callback) {
       bgImages.forEach((src, index) => {
         const img = new Image();
@@ -148,11 +165,9 @@
       });
     }
     
-    // Будем хранить текущую пару изображений: основное и размытую копию
     let currentImgs = null;
     const transitionTime = 1500; // время перехода в мс
     
-    // Выбираем случайное изображение из предзагруженных
     function getRandomImage() {
       const available = preloadedImages.filter(img => img !== null);
       if (!available.length) return null;
@@ -160,10 +175,9 @@
       return available[randomIndex];
     }
     
-    // Функция смены фона: создаём пару изображений – основное и размытую подложку
     function showNextBackground() {
       const newImgObj = getRandomImage();
-      if (!newImgObj) return; // если нет ни одного изображения
+      if (!newImgObj) return;
       
       const slideshow = document.getElementById('slideshow');
       
@@ -174,13 +188,11 @@
       const directionClass = Math.random() < 0.5 ? 'slide-ltr' : 'slide-rtl';
       newMain.classList.add(directionClass);
       
-      // Создаем размытую копию (без скольжения)
+      // Создаем размытую копию изображения
       const newBlur = document.createElement('img');
       newBlur.src = newImgObj.src;
       newBlur.classList.add('blur-img');
       
-      // Добавляем размытую копию перед основным изображением,
-      // чтобы она была позади и всегда заполняла экран
       slideshow.appendChild(newBlur);
       slideshow.appendChild(newMain);
       
@@ -188,11 +200,10 @@
       void newMain.offsetWidth;
       void newBlur.offsetWidth;
       
-      // Запускаем анимацию появления (fade-in)
+      // Запускаем анимацию появления
       newMain.style.opacity = "1";
       newBlur.style.opacity = "1";
       
-      // Если есть предыдущая пара изображений – плавно скрываем её
       if (currentImgs) {
         const oldMain = currentImgs.main;
         const oldBlur = currentImgs.blur;
@@ -211,13 +222,12 @@
       currentImgs = { main: newMain, blur: newBlur };
     }
     
-    // После предварительной загрузки запускаем слайдшоу
     preloadImages(() => {
       showNextBackground();
       setInterval(showNextBackground, 8000);
     });
     
-    // ==== Игровой код (без изменений) ====
+    // --- Игровой код ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreboard = document.getElementById('scoreboard');
@@ -281,7 +291,9 @@
       checkGameOver();
     }
     
+    // При первом клике или касании запускается музыка
     canvas.addEventListener('click', function(e) {
+      startMusic();
       if (gameOver) return;
       const rect = canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -290,6 +302,7 @@
     });
     
     canvas.addEventListener('touchstart', function(e) {
+      startMusic();
       if (gameOver) return;
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
