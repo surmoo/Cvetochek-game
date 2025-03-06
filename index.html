@@ -86,7 +86,7 @@
   
   <script>
     // --- Аудио: инициализация одного трека ---
-    const backgroundTrack = new Audio('audio/track.mp3');
+    const backgroundTrack = new Audio('music/audio2.mp3');
     backgroundTrack.loop = true;
     backgroundTrack.preload = "auto";
     backgroundTrack.load();
@@ -101,7 +101,7 @@
       }
     }
     
-    // Одноразовый запуск музыки после первого взаимодействия с документом
+    // Запускаем музыку при первом взаимодействии с документом
     function onFirstUserInteraction() {
       startMusic();
       document.removeEventListener('click', onFirstUserInteraction);
@@ -284,6 +284,10 @@
         const hitRadius = emojiSize / 2 + extraMargin;
         const distance = Math.hypot(clickX - centerX, clickY - centerY);
         if (distance <= hitRadius) {
+          // Если это цветок и музыка не играет, запускаем музыку
+          if (emoji.isFlower && backgroundTrack.paused) {
+            startMusic();
+          }
           if (emoji.isFlower) {
             score++;
           } else {
