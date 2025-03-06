@@ -171,18 +171,46 @@
       });
     }
     
+    // --- Новая логика для случайного порядка без повторений ---
+    let imageOrder = [];
+    let currentImageIndex = 0;
+    
+    // Функция перемешивания массива (алгоритм Фишера — Йетса)
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    
+    // Генерируем массив индексов для предзагруженных изображений (исключая null)
+    function generateImageOrder() {
+      imageOrder = [];
+      for (let i = 0; i < preloadedImages.length; i++) {
+        if (preloadedImages[i] !== null) {
+          imageOrder.push(i);
+        }
+      }
+      shuffleArray(imageOrder);
+      currentImageIndex = 0;
+    }
+    
+    // Возвращает следующее изображение согласно перемешанному порядку
+    function getNextImage() {
+      if (imageOrder.length === 0) return null;
+      const idx = imageOrder[currentImageIndex];
+      currentImageIndex++;
+      if (currentImageIndex >= imageOrder.length) {
+        generateImageOrder(); // сформировать новый случайный порядок
+      }
+      return preloadedImages[idx];
+    }
+    
     let currentImgs = null;
     const transitionTime = 1500; // время перехода в мс
     
-    function getRandomImage() {
-      const available = preloadedImages.filter(img => img !== null);
-      if (!available.length) return null;
-      const randomIndex = Math.floor(Math.random() * available.length);
-      return available[randomIndex];
-    }
-    
     function showNextBackground() {
-      const newImgObj = getRandomImage();
+      const newImgObj = getNextImage();
       if (!newImgObj) return;
       
       const slideshow = document.getElementById('slideshow');
@@ -229,6 +257,7 @@
     }
     
     preloadImages(() => {
+      generateImageOrder();
       showNextBackground();
       setInterval(showNextBackground, 8000);
     });
@@ -284,7 +313,7 @@
         const hitRadius = emojiSize / 2 + extraMargin;
         const distance = Math.hypot(clickX - centerX, clickY - centerY);
         if (distance <= hitRadius) {
-          // Если это цветок и музыка не играет, запускаем музыку
+          // Если это цветок и музыка не играет, запускаем её
           if (emoji.isFlower && backgroundTrack.paused) {
             startMusic();
           }
