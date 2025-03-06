@@ -86,19 +86,29 @@
   
   <script>
     // --- Аудио: инициализация одного трека ---
-    const backgroundTrack = new Audio('music/audio2.mp3');
+    const backgroundTrack = new Audio('audio/track.mp3');
     backgroundTrack.loop = true;
     backgroundTrack.preload = "auto";
-    // Принудительно начинаем загрузку аудио
     backgroundTrack.load();
     let musicStarted = false;
     
     function startMusic() {
       if (!musicStarted) {
         musicStarted = true;
-        backgroundTrack.play();
+        backgroundTrack.play().catch(err => {
+          console.error("Ошибка воспроизведения музыки:", err);
+        });
       }
     }
+    
+    // Одноразовый запуск музыки после первого взаимодействия с документом
+    function onFirstUserInteraction() {
+      startMusic();
+      document.removeEventListener('click', onFirstUserInteraction);
+      document.removeEventListener('touchstart', onFirstUserInteraction);
+    }
+    document.addEventListener('click', onFirstUserInteraction);
+    document.addEventListener('touchstart', onFirstUserInteraction);
     
     // --- Фоновое слайдшоу ---
     const bgImages = [
@@ -287,9 +297,8 @@
       checkGameOver();
     }
     
-    // При первом клике или касании запускается музыка
+    // Обработчик для кликов по игровому холсту
     canvas.addEventListener('click', function(e) {
-      startMusic();
       if (gameOver) return;
       const rect = canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -298,7 +307,6 @@
     });
     
     canvas.addEventListener('touchstart', function(e) {
-      startMusic();
       if (gameOver) return;
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
