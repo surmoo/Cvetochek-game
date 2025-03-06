@@ -85,22 +85,18 @@
   <canvas id="gameCanvas"></canvas>
   
   <script>
-    // --- Аудио: инициализация двух треков ---
-    const track1 = new Audio('music/audio1.mp3');
-    const track2 = new Audio('audio/audio2.mp3');
+    // --- Аудио: инициализация одного трека ---
+    const backgroundTrack = new Audio('music/audio2.mp3');
+    backgroundTrack.loop = true;
+    backgroundTrack.preload = "auto";
+    // Принудительно начинаем загрузку аудио
+    backgroundTrack.load();
     let musicStarted = false;
-    
-    track1.addEventListener('ended', () => {
-      track2.play();
-    });
-    track2.addEventListener('ended', () => {
-      track1.play();
-    });
     
     function startMusic() {
       if (!musicStarted) {
         musicStarted = true;
-        track1.play();
+        backgroundTrack.play();
       }
     }
     
